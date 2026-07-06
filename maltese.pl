@@ -1,12 +1,13 @@
 # Maltese
 use strict; use warnings;
 use feature 'say';
-
+use JSON::Tiny;
 # CLI based, concise version coming later
 
 # Maltese is MacOS oriented
 
-my $data = {}
+my $saveFile = path(malteseSave.jsonl);
+my $data = {};
 sub create {
     GETNAME:
     say "What would you like to name this package?";
@@ -57,23 +58,31 @@ sub add {
                 push($data->{scripts}), $hash;
             }
             else {
-                
+                die 'Invalid script found:' . $script
+                # maybe make a better error check later
             }
         }
     }
 }
 
 sub save {
-    say "saving!";
-    # push the temporary $data object to toml (or something else) then clear it
+    # push the temporary $data object to jsonl (or something else) then clear it
+    my $count = 0;
+    $count = @{$data->{scripts}};
+    if ($count == 0) {die 'You cannot save right now --you havent given Maltese any scripts.'};
+    $saveFile->append(encode_json($data->{scripts}) . "\n");
+    $data->{scripts} = [];
+    
+    say "Your package has been saved."
 }
 
 sub readSave {
     say "reading!";
+    my @scripts = map {decode_json($_)};
 }
 
 sub compile {
-    say "compiling!"
+    say "compiling!";
 }
 
 do {
@@ -105,7 +114,7 @@ do {
         save();
     }
     else {
-        say 'invalid input'; redo;
+        say 'invalid input'; redo; # this won't work, will it? Since it's in its own nest
     }
 }
 
