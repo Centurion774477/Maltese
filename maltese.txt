@@ -1,0 +1,12 @@
+Maltese is an opinionated package manager framework that keeps you in charge.
+You provide Maltese with scripts for your dependencies, such as "brew install elixir", and Maltese packages them into a unified collection.
+
+Maltese provides you with an idiomatic UI. You declare a key dependency; title it --
+and then provide a couple setup scripts, or just one; up to you.
+
+After you are done setting up your Maltese scripts, Maltese will compile itself into a native binary with all the scripts saved.
+You just provide your users with the compiled binary install script, and then they get walked through every dependency for your project.
+
+on the user side of things:
+Maltese walks down the list of your dependencies and brings up your chosen install scripts.
+The users can choose to let Maltese install the given dependency for them, or they can manually type/copy and paste the scripts into their terminal.
