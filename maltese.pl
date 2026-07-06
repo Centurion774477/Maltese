@@ -1,12 +1,11 @@
-# Maltese
+#!/usr/bin/perl
+
 use strict; use warnings;
 use feature 'say';
 use JSON::Tiny;
 use Path::Tiny;
 
-# CLI based, concise version coming later
-
-# Maltese is MacOS oriented
+# Maltese is MacOS oriented, so some features may break on other systems.
 
 my $saveFile = path("malteseSave.jsonl");
 my $userFile = path("malteseUser.pl");
@@ -26,20 +25,20 @@ sub create {
 
 # argue @scriptArray as... an array of scripts? Shocker. . .
 sub parseScripts {
-        for my $script (@scriptArray) {
-            # brew -> brew install elixir
-            if ($script =~ /(?<header>\w+)\s+->\s+(?<content>.+/) {
-                my $hash = {scriptName => $+{header}, scriptBody => $+{content}};
-                if ($+{header} =~ /sudo/) {
-                    die 'Sorry, but Maltese does not allow sudo commands.'; # eventually, add more validation beyond the sudo checker
-                }
-                push($data->{scripts}), $hash;
+    for my $script (@scriptArray) {
+        # brew -> brew install elixir
+        if ($script =~ /(?<header>\w+)\s+->\s+(?<content>.+/) {
+            my $hash = {scriptName => $+{header}, scriptBody => $+{content}};
+            if ($+{header} =~ /sudo/) {
+                die 'Sorry, but Maltese does not allow sudo commands.'; # eventually, add more validation beyond the sudo checker
             }
-            else {
-                die 'Invalid script found:' . $script
-                # maybe make a better error check later
-            }
+            push($data->{scripts}), $hash;
         }
+        else {
+            die 'Invalid script found:' . $script
+            # maybe make a better error check later
+        }
+    }
 }
 
 sub add {
@@ -85,7 +84,6 @@ sub save {
 }
 
 sub readSave {
-    # I have no fucking clue how to parse JSON
     my @scripts = map {decode_json($_)} $saveFile->lines({chomp => 1});
     die 'You dont have any scripts for this project' if (scalar @{data->{scripts}} == 0); # Trying to check for an empty array
     for my $script (@scripts) {
@@ -103,18 +101,27 @@ sub compile {
         die 'Please define a project before compiling'
     }
     say "compiling!";
-    say "Confirm: You are about to pack your scripts for" . $data->{packageName} . "Are you sure? Y/N";
+    say "Confirm: You are about to pack your scripts for " . $data->{packageName} . ". This will tarball your scripts and a CLI for your users." .
+    "Are you sure? Y/N";
+    
     chomp(my $gets = <STDIN>);
-    $gets eq 'Y' ? say 'compiling . . .' : say 'Abandoning the compilation process' && return;
     if ($gets eq 'Y') {
         say 'compiling . . .';
     } else {
         say 'Abandoning the compilation process';
         return;
     }
-    # now we have to run some scripts
-    # first, package the jsonl and malteseUser.pl files into a single directory
-    
+    # package the jsonl and malteseUser.pl files into a single directory, then tarball it via tarball.sh
+    mkdir("malteseUser") or die $!;
+    rename("malteseUser.pl", "malteseUser/malteseUser.pl") or die $!;
+    rename("malteseSave.jsonl", "malteseUser/malteseSave.jsonl") or die $!;
+
+    my $tarOutput = "malteseUser.tar.gz";
+
+    die 'Maltese failed to scaffold the malteseUser directory' unless (-d "malteseUser");
+    system("bash", "tarball.sh");
+    say "Successfully tarballed to file" . $tarOutput . "! You can now provide the tarball to your users 
+    and they will receive a walkthrough upon execution";
 }
 
 # this really doesn't need to be a function but it's cleaner this way
